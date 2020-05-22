@@ -33,7 +33,7 @@ jobs:
               status: 'completed'
             });
 
-            console.log(checks);
+            return checks
       - run: echo "${{ steps.previous-status.outputs.result }}"
       - name: Check out repository
         uses: actions/checkout@v2
