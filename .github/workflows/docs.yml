@@ -2,22 +2,45 @@ name: docs
 
 defaults:
   run:
-    shell: bash
     working-directory: docs
 
 on:
   push:
     branches: [ master ]
     paths:
-      - 'docs/**'
-      - '.github/workflows/docs.yml'
+      - .github/workflows/docs.yml
+      - docs/**
+      - '!docs/README.md'
   pull_request:
     branches: [ master ]
     paths:
-      - 'docs/**'
-      - '.github/workflows/docs.yml'
+      - .github/workflows/docs.yml
+      - docs/**
+      - '!docs/README.md'
 
 jobs:
+  danger:
+    runs-on: ubuntu-18.04
+    steps:
+      - run: exit 1
+      - name: Check out repository
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+      - uses: actions/cache@v1
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+      - run: yarn install --frozen-lockfile
+      - run: yarn danger ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   build:
     runs-on: ubuntu-18.04
     steps:
@@ -34,7 +57,8 @@ jobs:
             });
 
             return checks
-      - run: echo "${{ steps.previous-status.outputs.result }}"
+      - run: echo '${{ steps.previous-status.outputs.result }}'
+      - run: exit 1
       - name: Check out repository
         uses: actions/checkout@v2
         with:
@@ -45,13 +69,10 @@ jobs:
       - uses: actions/cache@v1
         with:
           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('docs/yarn.lock') }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
       - run: yarn install --frozen-lockfile
-      - run: yarn danger ci
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: yarn export
         timeout-minutes: 10
       - name: test links
