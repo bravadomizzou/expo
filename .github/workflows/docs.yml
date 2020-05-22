@@ -26,9 +26,9 @@ jobs:
         with:
           script: |
             const checks = github.checks.listForRef({
-              context.repo.owner,
-              context.repo.repo,
-              context.ref,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.ref,
               check_name: context.workflow,
               status: 'completed'
             });
