@@ -21,6 +21,20 @@ jobs:
   docs:
     runs-on: ubuntu-18.04
     steps:
+      - uses: actions/github-script@v1
+        id: previous-status
+        with:
+          script: |
+            const checks = github.checks.listForRef({
+              context.repo.owner,
+              context.repo.repo,
+              context.ref,
+              check_name: context.workflow,
+              status: 'completed'
+            });
+
+            console.log(checks);
+      - run: echo "${{steps.previous-status.outputs.result}}"
       - name: Check out repository
         uses: actions/checkout@v2
         with:
